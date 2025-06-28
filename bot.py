@@ -12,7 +12,7 @@ openai.api_key = OPENAI_API_KEY
 
 # Bot & Flask setup
 bot = telegram.Bot(token=TOKEN)
-app = Flask(name)
+app = Flask(__name__)
 
 # Dispatcher setup (global)
 dispatcher = Dispatcher(bot, None, workers=0)

@@ -1,4 +1,4 @@
 flask
 python-telegram-bot==13.7
-openai
+openai==0.28.1
 gunicorn

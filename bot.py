@@ -10,7 +10,7 @@ OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 openai.api_key = OPENAI_API_KEY
 bot = telegram.Bot(token=TOKEN)
-app = Flask(name)
+app = Flask(__name__)
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def respond():

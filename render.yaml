@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: telegram-bot
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn bot:app"
+    envVars:
+      - key: TELEGRAM_TOKEN
+        value: 7753420735:AAGaL6LtLk59RuO7VOqB6FAnheIUi9f5OG4
+      - key: OPENAI_API_KEY
+        value: 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

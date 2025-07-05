@@ -5,41 +5,44 @@ import telegram
 from telegram import Update
 from telegram.ext import Dispatcher, MessageHandler, Filters, CallbackContext
 
-# Setup environment
+# Load API keys
 TOKEN = os.environ["TELEGRAM_TOKEN"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-openai.api_key = OPENAI_API_KEY
 
-# Bot & Flask setup
+# Initialize APIs
+openai.api_key = OPENAI_API_KEY
 bot = telegram.Bot(token=TOKEN)
 app = Flask(__name__)
 
-# Dispatcher setup (global)
+# Dispatcher setup
 dispatcher = Dispatcher(bot, None, workers=0)
 dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, lambda update, context: handle_message(update, context)))
 
-# Webhook route
+# Handle messages
+def handle_message(update: Update, context: CallbackContext):
+    user_msg = update.message.text
+    print("User:", user_msg)
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are Aira, a sweet and intelligent Indian girl who replies warmly and naturally."},
+            {"role": "user", "content": user_msg}
+        ]
+    )
+
+    reply = response.choices[0].message["content"].strip()
+    print("Bot:", reply)
+    update.message.reply_text(reply)
+
+# Webhook endpoint
 @app.route("/webhook", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
     dispatcher.process_update(update)
     return "ok"
 
-# OpenAI message handler
-def handle_message(update: Update, context: CallbackContext):
-    user_msg = update.message.text
-    prompt = f"You are Aira, a sweet and intelligent Indian girl who replies warmly and naturally. Respond to this: {user_msg}"
-
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        temperature=0.7,
-        max_tokens=150
-    )
-    reply = response.choices[0].text.strip()
-    update.message.reply_text(reply)
-
-# Test route
+# Health check
 @app.route("/")
 def index():
     return "Bot is running!"

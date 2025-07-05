@@ -1,29 +1,31 @@
 import os
+import openai
 from flask import Flask, request
 import telegram
 from telegram import Update
 from telegram.ext import Dispatcher, MessageHandler, Filters, CallbackContext
-from openai import OpenAI
 
-# Environment Variables
+# Set environment variables
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
-# OpenAI Client (v1+ style)
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Set OpenAI key
+openai.api_key = OPENAI_API_KEY
 
-# Telegram Bot
+# Setup Flask and Telegram Bot
+app = Flask(__name__)
 bot = telegram.Bot(token=TELEGRAM_TOKEN)
 
-# Flask App
-app = Flask(__name__)
+# Global Dispatcher
+dispatcher = Dispatcher(bot, None, workers=0)
+dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, lambda update, context: handle_message(update, context)))
 
 # Message Handler
 def handle_message(update: Update, context: CallbackContext):
     user_message = update.message.text
-
     try:
-        response = client.chat.completions.create(
+        # Create prompt for GPT
+        response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {
@@ -38,17 +40,11 @@ def handle_message(update: Update, context: CallbackContext):
             temperature=0.7,
             max_tokens=150
         )
-
         reply = response.choices[0].message.content.strip()
         update.message.reply_text(reply)
-
     except Exception as e:
+        update.message.reply_text("Sorry, there was an error processing your request.")
         print(f"OpenAI Error: {e}")
-        update.message.reply_text("Sorry, something went wrong. Please try again later.")
-
-# Dispatcher Setup
-dispatcher = Dispatcher(bot, None, workers=0)
-dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
 
 # Webhook Route
 @app.route("/webhook", methods=["POST"])
@@ -57,7 +53,7 @@ def webhook():
     dispatcher.process_update(update)
     return "ok"
 
-# Health Check
+# Root Test Route
 @app.route("/", methods=["GET"])
 def index():
-    return "Bot is live!"
+    return "Bot is running!"

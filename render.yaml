@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: telegram-bot-render
+    name: telegram-bot
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn bot:app
